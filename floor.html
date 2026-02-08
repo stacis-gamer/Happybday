@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Floor</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  image-rendering: pixelated;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: black;
+  overflow: hidden;
+  font-family: monospace;
+}
+
+/* ---------- SCENE LAYERS ---------- */
+#scene, #scene2 {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+#scene2 {
+  opacity: 0;
+  transition: opacity 3s ease;
+}
+
+/* ---------- FADE ---------- */
+#fade {
+  position: absolute;
+  inset: 0;
+  background: black;
+  opacity: 0;
+  transition: opacity 3s ease;
+  z-index: 10;
+}
+
+/* ---------- TEXT ---------- */
+#dialogue {
+  position: absolute;
+  bottom: 18%;
+  width: 100%;
+  text-align: center;
+  color: white;
+  font-size: 3vw;
+  letter-spacing: 3px;
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+
+/* ---------- PROMPT ---------- */
+#prompt {
+  display: none;
+  position: absolute;
+  bottom: 8%;
+  width: 100%;
+  text-align: center;
+  font-size: 2.6vw;
+  color: #ffd84d;
+  animation: blink 2.4s infinite;
+}
+
+@keyframes blink {
+  0%,100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="scene"></div>
+<div id="scene2"></div>
+<div id="fade"></div>
+<div id="dialogue"></div>
+<div id="prompt"></div>
+
+<audio id="bgm" src="bg.mp3" loop></audio>
+<audio id="tap" src="tap.mp3"></audio>
+<audio id="door" src="door.wav"></audio>
+<audio id="yay" src="yay.wav"></audio>
+
+<script>
+const scene = document.getElementById("scene");
+const scene2 = document.getElementById("scene2");
+const dialogue = document.getElementById("dialogue");
+const prompt = document.getElementById("prompt");
+const fade = document.getElementById("fade");
+
+const bgm = document.getElementById("bgm");
+const tap = document.getElementById("tap");
+const door = document.getElementById("door");
+const yay = document.getElementById("yay");
+
+let bgmStarted = false;
+let canTap = false;
+let step = 0;
+
+const flow = [
+  {img:"11.png", text:"The flashlight should be in bedroom", nav:"Tap to open the bedroom door"},
+  {img:"12.png", sound:door, nav:"Tap to Enter"},
+  {img:"13.png", text:"Flashlight is on the drawer", nav:"Tap to pick flashlight"},
+  {img:"14.png", text:"You found a flashlight", nav:"Tap to continue"},
+  {img:"15.png", text:"Who's there on the bed", nav:"Tap to use flashlight"},
+  {img:"16.png", text:"Its Mochi, the cat", nav:"Tap to continue"},
+  {img:"11.png", text:"Something's wrong in that room", nav:"Tap to investigate"},
+  {img:"17.png", nav:"Tap to go inside"},
+  {img:"18.png", text:"Its too dark here", nav:"Tap to use flashlight"},
+  {img:"19.png", text:["Confetti?","Whats happening here?","Wait"], nav:"Tap to proceed"},
+  {img:"20.png", sound:yay, end:true}
+];
+
+/* ---------- START ---------- */
+scene.style.backgroundImage = `url(${flow[0].img})`;
+
+document.addEventListener("pointerdown", () => {
+  if (!bgmStarted) {
+    bgm.volume = 0.6;
+    bgm.play().catch(()=>{});
+    bgmStarted = true;
+  }
+  tap.currentTime = 0;
+  tap.play().catch(()=>{});
+});
+
+function showText(t, cb){
+  dialogue.textContent = "";
+  dialogue.style.opacity = "1";
+  let i = 0;
+  const it = setInterval(()=>{
+    dialogue.textContent += t[i++];
+    if(i>=t.length){
+      clearInterval(it);
+      setTimeout(cb,3000);
+    }
+  },120);
+}
+
+function diffuse(img, cb){
+  scene2.style.backgroundImage = `url(${img})`;
+  scene2.style.opacity = "1";
+  setTimeout(()=>{
+    scene.style.backgroundImage = `url(${img})`;
+    scene2.style.opacity = "0";
+    if(cb) cb();
+  },3000);
+}
+
+function next(){
+  if(!canTap) return;
+  canTap = false;
+  prompt.style.display = "none";
+  dialogue.style.opacity = "0";
+
+  step++;
+  const s = flow[step];
+
+  diffuse(s.img, ()=>{
+    if(s.sound) s.sound.play().catch(()=>{});
+
+    if(s.text){
+      if(Array.isArray(s.text)){
+        let idx=0;
+        const seq=()=>{
+          if(idx>=s.text.length){
+            prompt.textContent=s.nav;
+            prompt.style.display="block";
+            canTap=true;
+            return;
+          }
+          showText(s.text[idx++], ()=>{ dialogue.style.opacity=0; setTimeout(seq,2000); });
+        };
+        seq();
+      } else {
+        showText(s.text, ()=>{
+          prompt.textContent=s.nav;
+          prompt.style.display="block";
+          canTap=true;
+        });
+      }
+    } else if(s.nav){
+      prompt.textContent=s.nav;
+      prompt.style.display="block";
+      canTap=true;
+    }
+
+    if(s.end){
+      setTimeout(()=>{
+        fade.style.opacity="1";
+        setTimeout(()=>{
+          dialogue.textContent="Happy birthday yato,\nA small gift from Stacis 😛";
+          dialogue.style.opacity="1";
+        },3000);
+      },10000);
+    }
+  });
+}
+
+setTimeout(()=>{
+  showText(flow[0].text, ()=>{
+    prompt.textContent=flow[0].nav;
+    prompt.style.display="block";
+    canTap=true;
+  });
+},4000);
+
+document.addEventListener("click", next);
+</script>
+
+</body>
+</html>
