@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Loading...</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: black;
+  overflow: hidden;
+}
+
+/* ---------- VIDEO ---------- */
+#loading-video {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
+
+/* ---------- FADE IN ---------- */
+#fade {
+  position: absolute;
+  inset: 0;
+  background: black;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 1s ease;
+  z-index: 5;
+}
+
+/* ---------- PORTRAIT MODE ---------- */
+@media (orientation: portrait) {
+  body {
+    filter: blur(6px);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<video id="loading-video" autoplay muted playsinline>
+  <source src="loading.mp4" type="video/mp4">
+</video>
+
+<div id="fade"></div>
+
+<audio id="tapSound" src="tap.mp3" preload="auto"></audio>
+
+<script>
+const fade = document.getElementById("fade");
+const tapSound = document.getElementById("tapSound");
+const video = document.getElementById("loading-video");
+
+/* ---------- FADE IN ---------- */
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    fade.style.opacity = "0";
+  }, 100);
+});
+
+/* ---------- GLOBAL TAP SOUND ---------- */
+document.addEventListener("pointerdown", () => {
+  tapSound.currentTime = 0;
+  tapSound.play().catch(() => {});
+});
+
+/* ---------- REDIRECT WHEN VIDEO ENDS ---------- */
+video.addEventListener("ended", () => {
+  window.location.href = "outside.html";
+});
+</script>
+
+</body>
+</html>
