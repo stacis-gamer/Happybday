@@ -30,7 +30,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 26px;
   animation: fadeIn 1.2s ease-out;
 }
 
@@ -70,7 +70,7 @@ html, body {
 }
 
 #play-btn.locked {
-  opacity: 0.5;
+  opacity: 0.45;
   pointer-events: none;
   animation: none;
 }
@@ -80,24 +80,13 @@ html, body {
   box-shadow: 0 0 6px #3aaaff;
 }
 
-/* ---------- LOADING TEXT ---------- */
-#loading-text {
+/* ---------- LOADING % ---------- */
+#progress {
   position: relative;
-  font-size: 2.2vw;
+  font-size: 2.4vw;
   color: #9aa4ff;
-  opacity: 0.8;
-  animation: blink 1.8s infinite;
-  z-index: 2;
-}
-
-/* ---------- ROTATE TEXT ---------- */
-#rotate {
-  position: absolute;
-  bottom: 20px;
-  font-size: 2vw;
-  color: #9aa4ff;
-  opacity: 0.7;
-  animation: blink 2.2s infinite;
+  opacity: 0.85;
+  animation: blink 1.6s infinite;
   z-index: 2;
 }
 
@@ -126,19 +115,12 @@ html, body {
 
 @keyframes blink {
   0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.8; }
+  50% { opacity: 0.85; }
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(1.05); }
   to { opacity: 1; transform: scale(1); }
-}
-
-/* ---------- PORTRAIT MODE ---------- */
-@media (orientation: portrait) {
-  #game-screen {
-    filter: blur(6px);
-  }
 }
 </style>
 </head>
@@ -150,22 +132,20 @@ html, body {
 
   <div id="title">WELCOME YATO</div>
   <div id="play-btn" class="locked">▶ PLAY</div>
-  <div id="loading-text">Loading assets...</div>
-  <div id="rotate">↻ Rotate your phone for best experience</div>
+  <div id="progress">Loading 0%</div>
 </div>
 
 <div id="transition"></div>
 
-<!-- TAP SOUND -->
 <audio id="tapSound" src="tap.mp3" preload="auto"></audio>
 
 <script>
 const tapSound = document.getElementById("tapSound");
 const playBtn = document.getElementById("play-btn");
 const transition = document.getElementById("transition");
-const loadingText = document.getElementById("loading-text");
+const progressText = document.getElementById("progress");
 
-/* ---------- ASSETS TO PRELOAD ---------- */
+/* ---------- ASSETS ---------- */
 const ASSETS = [
   "back.png",
   "1.png","2.png","3.png","4.png","5.png",
@@ -176,6 +156,7 @@ const ASSETS = [
 ];
 
 let loaded = 0;
+const total = ASSETS.length;
 
 /* ---------- PRELOAD ---------- */
 ASSETS.forEach(src => {
@@ -183,23 +164,25 @@ ASSETS.forEach(src => {
   img.src = src;
   img.onload = () => {
     loaded++;
-    if (loaded === ASSETS.length) {
-      loadingText.textContent = "Ready!";
+    const percent = Math.floor((loaded / total) * 100);
+    progressText.textContent = `Loading ${percent}%`;
+
+    if (loaded === total) {
+      progressText.textContent = "Ready";
       playBtn.classList.remove("locked");
     }
   };
 });
 
-/* ---------- GLOBAL TAP SOUND ---------- */
+/* ---------- TAP SOUND ---------- */
 document.addEventListener("pointerdown", () => {
   tapSound.currentTime = 0;
   tapSound.play().catch(() => {});
 });
 
-/* ---------- PLAY BUTTON ---------- */
+/* ---------- PLAY ---------- */
 playBtn.addEventListener("click", () => {
   if (playBtn.classList.contains("locked")) return;
-
   transition.style.opacity = "1";
   setTimeout(() => {
     window.location.href = "loading.html";
