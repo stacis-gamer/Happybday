@@ -30,7 +30,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 26px;
+  gap: 24px;
   animation: fadeIn 1.2s ease-out;
 }
 
@@ -75,18 +75,20 @@ html, body {
   animation: none;
 }
 
-#play-btn:active {
-  transform: scale(0.92);
-  box-shadow: 0 0 6px #3aaaff;
-}
-
-/* ---------- LOADING % ---------- */
+/* ---------- LOADING TEXT ---------- */
 #progress {
   position: relative;
   font-size: 2.4vw;
   color: #9aa4ff;
   opacity: 0.85;
   animation: blink 1.6s infinite;
+  z-index: 2;
+}
+
+#hint {
+  font-size: 1.9vw;
+  color: #8a94ff;
+  opacity: 0.6;
   z-index: 2;
 }
 
@@ -133,6 +135,7 @@ html, body {
   <div id="title">WELCOME YATO</div>
   <div id="play-btn" class="locked">▶ PLAY</div>
   <div id="progress">Loading 0%</div>
+  <div id="hint">Please wait, assets are loading…</div>
 </div>
 
 <div id="transition"></div>
@@ -155,23 +158,27 @@ const ASSETS = [
   "gallery_coat.png","gallery_powercut.png","stairs_pov.png"
 ];
 
-let loaded = 0;
+let completed = 0;
 const total = ASSETS.length;
 
-/* ---------- PRELOAD ---------- */
+/* ---------- PRELOAD (BULLETPROOF) ---------- */
 ASSETS.forEach(src => {
   const img = new Image();
   img.src = src;
-  img.onload = () => {
-    loaded++;
-    const percent = Math.floor((loaded / total) * 100);
+
+  const done = () => {
+    completed++;
+    const percent = Math.floor((completed / total) * 100);
     progressText.textContent = `Loading ${percent}%`;
 
-    if (loaded === total) {
+    if (completed === total) {
       progressText.textContent = "Ready";
       playBtn.classList.remove("locked");
     }
   };
+
+  img.onload = done;
+  img.onerror = done; // ← THIS IS THE KEY FIX
 });
 
 /* ---------- TAP SOUND ---------- */
