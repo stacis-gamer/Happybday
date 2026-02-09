@@ -80,7 +80,7 @@ const video = document.getElementById("loading-video");
 const status = document.getElementById("status");
 const tapSound = document.getElementById("tapSound");
 
-/* ---------- ASSETS TO PRELOAD ---------- */
+/* ---------- ASSETS ---------- */
 const ASSETS = [
   "back.png",
   "1.png","2.png","3.png","4.png","5.png",
@@ -90,23 +90,28 @@ const ASSETS = [
   "gallery_coat.png","gallery_powercut.png","stairs_pov.png"
 ];
 
-let assetsLoaded = 0;
+let completed = 0;
 let videoDone = false;
+const total = ASSETS.length;
 
 /* ---------- FADE IN ---------- */
 window.addEventListener("load", () => {
   setTimeout(() => fade.style.opacity = "0", 200);
 });
 
-/* ---------- PRELOAD ASSETS ---------- */
+/* ---------- PRELOAD (BULLETPROOF) ---------- */
 ASSETS.forEach(src => {
   const img = new Image();
   img.src = src;
-  img.onload = () => {
-    assetsLoaded++;
-    status.textContent = `Loading world... (${assetsLoaded}/${ASSETS.length})`;
+
+  const done = () => {
+    completed++;
+    status.textContent = `Loading world... (${completed}/${total})`;
     checkReady();
   };
+
+  img.onload = done;
+  img.onerror = done; // ← CRITICAL FIX
 });
 
 /* ---------- VIDEO END ---------- */
@@ -117,7 +122,7 @@ video.addEventListener("ended", () => {
 
 /* ---------- READY CHECK ---------- */
 function checkReady() {
-  if (assetsLoaded === ASSETS.length && videoDone) {
+  if (completed === total && videoDone) {
     status.textContent = "Entering world...";
     fade.style.opacity = "1";
 
