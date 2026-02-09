@@ -26,22 +26,39 @@ html, body {
   object-fit: cover;
 }
 
-/* ---------- FADE IN ---------- */
+/* ---------- FADE ---------- */
 #fade {
   position: absolute;
   inset: 0;
   background: black;
   opacity: 1;
   pointer-events: none;
-  transition: opacity 1s ease;
+  transition: opacity 1.2s ease;
   z-index: 5;
 }
 
-/* ---------- PORTRAIT MODE ---------- */
+/* ---------- LOADING TEXT ---------- */
+#status {
+  position: absolute;
+  bottom: 8%;
+  width: 100%;
+  text-align: center;
+  font-family: monospace;
+  font-size: 2.4vw;
+  color: #9aa4ff;
+  opacity: 0.85;
+  animation: blink 1.8s infinite;
+  z-index: 6;
+}
+
+@keyframes blink {
+  0%,100% { opacity: 0.3; }
+  50% { opacity: 0.85; }
+}
+
+/* ---------- PORTRAIT ---------- */
 @media (orientation: portrait) {
-  body {
-    filter: blur(6px);
-  }
+  body { filter: blur(6px); }
 }
 </style>
 </head>
@@ -53,30 +70,67 @@ html, body {
 </video>
 
 <div id="fade"></div>
+<div id="status">Loading world...</div>
 
 <audio id="tapSound" src="tap.mp3" preload="auto"></audio>
 
 <script>
 const fade = document.getElementById("fade");
-const tapSound = document.getElementById("tapSound");
 const video = document.getElementById("loading-video");
+const status = document.getElementById("status");
+const tapSound = document.getElementById("tapSound");
+
+/* ---------- ASSETS TO PRELOAD ---------- */
+const ASSETS = [
+  "back.png",
+  "1.png","2.png","3.png","4.png","5.png",
+  "11.png","12.png","13.png","14.png","15.png",
+  "16.png","17.png","18.png","19.png","20.png",
+  "gallery_base.png","gallery_umbrella.png","gallery_bag.png",
+  "gallery_coat.png","gallery_powercut.png","stairs_pov.png"
+];
+
+let assetsLoaded = 0;
+let videoDone = false;
 
 /* ---------- FADE IN ---------- */
 window.addEventListener("load", () => {
-  setTimeout(() => {
-    fade.style.opacity = "0";
-  }, 100);
+  setTimeout(() => fade.style.opacity = "0", 200);
 });
+
+/* ---------- PRELOAD ASSETS ---------- */
+ASSETS.forEach(src => {
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    assetsLoaded++;
+    status.textContent = `Loading world... (${assetsLoaded}/${ASSETS.length})`;
+    checkReady();
+  };
+});
+
+/* ---------- VIDEO END ---------- */
+video.addEventListener("ended", () => {
+  videoDone = true;
+  checkReady();
+});
+
+/* ---------- READY CHECK ---------- */
+function checkReady() {
+  if (assetsLoaded === ASSETS.length && videoDone) {
+    status.textContent = "Entering world...";
+    fade.style.opacity = "1";
+
+    setTimeout(() => {
+      window.location.href = "outside.html";
+    }, 1200);
+  }
+}
 
 /* ---------- GLOBAL TAP SOUND ---------- */
 document.addEventListener("pointerdown", () => {
   tapSound.currentTime = 0;
   tapSound.play().catch(() => {});
-});
-
-/* ---------- REDIRECT WHEN VIDEO ENDS ---------- */
-video.addEventListener("ended", () => {
-  window.location.href = "outside.html";
 });
 </script>
 
