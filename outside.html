@@ -25,11 +25,12 @@ html, body {
 #scene {
   width: 100vw;
   height: 100vh;
-  background: url("O.png") center center / cover no-repeat;
   position: relative;
+  background-size: cover;
+  background-position: center;
 }
 
-/* ---------- FADE OVERLAY ---------- */
+/* ---------- FADE ---------- */
 #fade {
   position: absolute;
   inset: 0;
@@ -46,10 +47,9 @@ html, body {
   bottom: 16%;
   width: 100%;
   text-align: center;
-  color: #ffffff;
+  color: white;
   font-size: 3.2vw;
   letter-spacing: 3px;
-  text-shadow: 0 0 6px #000;
   opacity: 0;
   transition: opacity 2s ease;
 }
@@ -71,11 +71,9 @@ html, body {
   50% { opacity: 1; }
 }
 
-/* ---------- PORTRAIT MODE ---------- */
+/* ---------- PORTRAIT ---------- */
 @media (orientation: portrait) {
-  body {
-    filter: blur(6px);
-  }
+  body { filter: blur(6px); }
 }
 </style>
 </head>
@@ -93,10 +91,10 @@ html, body {
 <audio id="doorSound" src="door.wav"></audio>
 
 <script>
+const scene = document.getElementById("scene");
 const fade = document.getElementById("fade");
 const dialogue = document.getElementById("dialogue");
 const prompt = document.getElementById("prompt");
-const scene = document.getElementById("scene");
 
 const bgm = document.getElementById("bgm");
 const tapSound = document.getElementById("tapSound");
@@ -106,16 +104,27 @@ let canInteract = false;
 let doorOpened = false;
 let bgmStarted = false;
 
-/* ---------- PAGE LOAD ---------- */
-window.addEventListener("load", () => {
-  // Fade IN
+/* ---------- PRELOAD IMAGES (LOWERCASE) ---------- */
+const closedImg = new Image();
+const openImg = new Image();
+
+closedImg.src = "o.png";
+openImg.src = "op.png";
+
+/* ---------- START AFTER IMAGE LOAD ---------- */
+closedImg.onload = () => {
+  scene.style.backgroundImage = 'url("o.png")';
+
   setTimeout(() => {
     fade.style.opacity = "0";
   }, 600);
 
-  // Silence before dialogue
   setTimeout(startDialogueSequence, 5000);
-});
+};
+
+closedImg.onerror = () => {
+  console.error("Failed to load o.png");
+};
 
 /* ---------- TYPEWRITER ---------- */
 function typeText(text, done) {
@@ -124,8 +133,7 @@ function typeText(text, done) {
 
   let i = 0;
   const interval = setInterval(() => {
-    dialogue.textContent += text[i];
-    i++;
+    dialogue.textContent += text[i++];
     if (i >= text.length) {
       clearInterval(interval);
       setTimeout(done, 4000);
@@ -146,20 +154,17 @@ function startDialogueSequence() {
           prompt.style.display = "block";
           canInteract = true;
         }, 3000);
-
       });
     }, 3000);
   });
 }
 
-/* ---------- AUDIO (MOBILE SAFE) ---------- */
+/* ---------- AUDIO ---------- */
 document.addEventListener("pointerdown", () => {
   if (!bgmStarted) {
     bgm.volume = 0.7;
-    bgm.currentTime = 0;
-    bgm.play().then(() => {
-      bgmStarted = true;
-    }).catch(() => {});
+    bgm.play().catch(() => {});
+    bgmStarted = true;
   }
 
   tapSound.currentTime = 0;
@@ -177,15 +182,8 @@ document.addEventListener("click", () => {
   doorSound.play().catch(() => {});
   scene.style.backgroundImage = 'url("op.png")';
 
-  // Wait 4 seconds with door open
-  setTimeout(() => {
-    fade.style.opacity = "1"; // Fade OUT
-  }, 4000);
-
-  // Redirect after full 6 seconds
-  setTimeout(() => {
-    window.location.href = "inside.html";
-  }, 6000);
+  setTimeout(() => fade.style.opacity = "1", 4000);
+  setTimeout(() => window.location.href = "inside.html", 6000);
 });
 </script>
 
